@@ -1,0 +1,155 @@
+<!--
+@author Rafael Campos
+@date 28 de Março de 2009
+-->
+<html>
+
+<head>
+
+<title>Load on scroll</title>
+
+<script language="javascript" type="text/javascript" src="jquery-1.3.1.js" ></script>
+<meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+
+<script>
+	/**
+	 * Configurações
+	 */
+	var colorline = "#EEEEEE";
+	
+	
+	/*alert( $("table").attr("height") );
+	var w = document.documentElement;
+	$("#info").append( " " + ( e.pageY ) );
+	$("#info").append( " " + waytop );*/
+	
+	$(document).ready(function(){ 
+		
+		//Retorno do ficheiro get.php
+		var str = "";
+		
+		//Distância ao topo
+		var waytop = window.pageYOffset;
+		
+		//Distância máxima percorrida desde o topo
+		var maxwaytop = window.pageYOffset;
+		
+		//Altura do ecrãn do cliente
+		var height = window.innerHeight;
+		
+		//Se pode fazer um novo pedido
+		var podepedir = true;
+		
+		if(navigator.appName == "Microsoft Internet Explorer"){
+			
+			waytop = document.body.scrollTop;
+			maxwaytop = document.body.scrollTop; 
+			height = document.body.clientHeight;
+			
+		}
+		
+		$("#listagem").load("get.php", "screenheight="+height, 
+			function(responseText, textStatus){	
+				
+				if(textStatus == "success"){
+					
+					$("table tr:odd").css("background-color",colorline);
+				} else {
+					
+					$(".info").html("<hr />Não foi possível carregar os dados.<hr />");
+					
+				}
+				
+			});
+			
+		$(window).scroll(function(){
+			
+			waytop = window.pageYOffset;
+			
+			if(navigator.appName == "Microsoft Internet Explorer")
+				waytop = document.body.scrollTop;
+			
+			if( waytop >= maxwaytop && podepedir ){
+				
+				maxwaytop = waytop;
+					
+				$.ajax({
+					
+					type: "POST",
+					url: "get.php",
+					dataType: "text",
+					data: "colnumber="+$("tr").length,
+					success: function(str){
+						
+						if( str != "" ){
+							
+							$("table").append("<tr><td>"+str+"</td></tr>");
+							
+							$("table tr:odd").css("background-color",colorline);
+							
+						} else {
+							
+							$(".info").html("<hr />O final da tabela foi atingido<hr />");
+							
+						}
+					},
+					beforeSend: function(){
+						
+						podepedir = false
+						
+					},
+					complete: function(){
+						
+						podepedir = true;
+						
+					},
+					error: function(){
+						
+						$("#info").text("Não é possível atender ao seu pedido de momento");
+						
+					}
+					
+				});
+				
+			}
+			
+		});
+		
+	
+	});
+</script>
+
+<style>
+	
+	body{ 
+		
+		font-family: verdana; 
+		background-image: URL("student_debt_1.jpg");
+		background-repeat: no-repeat;
+		background-position: right;
+		background-attachment: fixed;
+
+	}
+	
+	tr{ font-size: 12px;}
+	
+	#geral{ width: 300px; }
+	
+</style>
+
+</head>
+<body>
+
+<h1>Tabela alunos</h1>
+
+<div id="geral">
+
+<div class="info"></div>
+
+<div id="listagem"></div>
+
+<div class="info"></div>
+
+</div>
+</body>
+</html>
